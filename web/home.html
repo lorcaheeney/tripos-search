@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Tripos Search</title>
+	<style>
+		table {
+			  font-family: arial, sans-serif;
+			  border-collapse: collapse;
+			  width: 80%;
+			}
+		td, th {
+		  border: 1px solid #dddddd;
+		  text-align: left;
+		  padding: 8px;
+		}
+	</style>
+	<base target="_blank">
+
+</head>
+<body onload="load()">
+	<center>
+		<h1>Mathematical tripos exam question search</h1>
+			<div><input type="text" id="query" placeholder="search the latex directly..."><br><br>
+			<select id="course_select">
+				<option value="all">All courses</option>
+				<optgroup label="Part IA" id="part1">
+				<optgroup label="Part IB" id="part2">
+				<optgroup label="Part II" id="part3">
+			</select>
+			&nbsp;<button onclick="search()">Search</button></div><br><br>
+			<table id="results">
+				<tr><th>Course</th><th>Year</th><th>Question</th></tr>
+				<template id="result">
+					<tr>
+						<td id="course"></td>
+						<td id="year"></td>
+						<td><a id="pdf"></a></td>
+					</tr>
+				</template>
+			</table>
+	</center>
+	<script>
+		const part1 = ['Algebra and Geometry', 'Analysis', 'Analysis I', 'Differential Equations', 'Dynamics', 'Dynamics and Relativity', 'Groups', 'Numbers and Sets', 'Probability', 'Vector Calculus', 'Vectors and Matrices'];
+		const part2 = ['Analysis II', 'Analysis and Topology', 'Complex Analysis', 'Complex Analysis or Complex Methods', 'Complex Methods', 'Electromagnetism', 'Fluid Dynamics', 'Further Analysis', 'Geometry', 'Groups, Rings and Modules', 'Linear Algebra', 'Linear Mathematics', 'Markov Chains', 'Methods', 'Metric and Topological Spaces', 'Numerical Analysis', 'Optimization', 'Quadratic Mathematics', 'Quantum Mechanics', 'Special Relativity', 'Statistics', 'Variational Principles'];
+		const part3 = ['Algebraic Curves', 'Algebraic Geometry', 'Algebraic Topology', 'Algorithms and Networks', 'Analysis of Functions', 'Applications of Quantum Mechanics', 'Applied Probability', 'Asymptotic Methods', 'Automata and Formal Languages', 'Classical Dynamics', 'Coding and Cryptography', 'Combinatorics', 'Computational Statistics and Statistical Modelling', 'Cosmology', 'Differentiable Manifolds', 'Differential Geometry', 'Dynamical Systems', 'Dynamics of Differential Equations', 'Electrodynamics', 'Fluid Dynamics II', 'Foundations of Quantum Mechanics', 'Functional Analysis', 'Further Complex Methods', 'Galois Theory', 'General Relativity', 'Geometry and Groups', 'Geometry of Group Actions', 'Geometry of Surfaces', 'Graph Theory', 'Groups, Rings and Fields', 'Hilbert Spaces', 'Information Theory', 'Integrable Systems', 'Linear Analysis', 'Logic and Set Theory', 'Logic, Computation and Set Theory', 'Mathematical Biology', 'Mathematical Methods', 'Mathematics of Machine Learning', 'Methods of Mathematical Physics', 'Nonlinear Dynamical Systems', 'Nonlinear Waves', 'Nonlinear Waves and Integrable Systems', 'Number Fields', 'Number Theory', 'Optimisation and Control', 'Optimization and Control', 'Partial Differential Equations', 'Principles of Dynamics', 'Principles of Quantum Mechanics', 'Principles of Statistics', 'Probability and Measure', 'Quantum Information and Computation', 'Quantum Physics', 'Representation Theory', 'Riemann Surfaces', 'Set Theory and Logic', 'Statistical Modelling', 'Statistical Physics', 'Statistical Physics and Cosmology', 'Stochastic Financial Models', 'Symmetries and Groups in Physics', 'Theoretical Geophysics', 'Topics in Analysis', 'Transport Processes', 'Waves', 'Waves in Fluid and Solid Media'];
+		function load(){
+			part1list = document.querySelector("#part1")
+			for(c of part1){
+				part1list.innerHTML += "<option value='"+c+"'>"+c+"</option>";
+			}
+			part2list = document.querySelector("#part2")
+			for(c of part2){
+				part2list.innerHTML += "<option value='"+c+"'>"+c+"</option>";
+			}
+			part3list = document.querySelector("#part3")
+			for(c of part3){
+				part3list.innerHTML += "<option value='"+c+"'>"+c+"</option>";
+			}
+		}
+		async function search(){
+			let queryval = document.querySelector("#query").value;
+			let courseval = document.querySelector("#course_select").value;
+			const res = await fetch("./search?" + new URLSearchParams({query: queryval, course: courseval}));
+			const json = await res.json();
+			console.log(json);
+			document.querySelectorAll(".new").forEach(elem => {elem.remove()});
+			if ("results" in json){
+				let qs = json["results"];
+				qs.sort((a,b) => {
+					if (a["course"] < b["course"]) return -1;
+					if (a["course"] > b["course"]) return 1;
+					return parseInt(b["year"]) - parseInt(a["year"]);
+					});
+				for(q of qs){
+					let clone = document.querySelector("#result").content.firstElementChild.cloneNode(true);
+					clone.className = "new";
+					clone.querySelector("#course").textContent = q["course"];
+					clone.querySelector("#year").textContent = q["year"];
+					clone.querySelector("#pdf").href = "./pdf?id=" + q["id"];
+					clone.querySelector("#pdf").textContent = q["id"];
+					document.querySelector("#results").appendChild(clone);
+				}
+			}
+		}
+	</script>
+</body>
+</html>
